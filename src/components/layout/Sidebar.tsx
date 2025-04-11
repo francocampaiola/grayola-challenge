@@ -6,24 +6,33 @@ import {
   Home,
   Logs,
   Grid2x2,
-  FileText,
-  BarChart,
-  Calendar,
-  MessageSquare,
   LogOut,
   ChevronRight,
+  StickyNote,
+  ReceiptText,
+  Database,
+  Cog,
+  EllipsisVertical,
 } from "lucide-react";
+import { Avatar } from "../ui/avatar";
+import { AvatarFallback } from "@radix-ui/react-avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { DropdownMenuLabel } from "@radix-ui/react-dropdown-menu";
 
 const Sidebar = () => {
   const menuItems = [
     { icon: Home, text: "Panel de Control", disabled: true, hasArrow: false },
     { icon: Logs, text: "Pedidos", disabled: false, hasArrow: false },
     { icon: Grid2x2, text: "Servicios", disabled: true, hasArrow: false },
-    { icon: FileText, text: "Informes", disabled: true, hasArrow: true },
-    { icon: BarChart, text: "Facturas", disabled: true, hasArrow: false },
-    { icon: Calendar, text: "Almacenamiento", disabled: true, hasArrow: false },
+    { icon: StickyNote, text: "Informes", disabled: true, hasArrow: true },
+    { icon: ReceiptText, text: "Facturas", disabled: true, hasArrow: false },
+    { icon: Database, text: "Almacenamiento", disabled: true, hasArrow: false },
     {
-      icon: MessageSquare,
+      icon: Cog,
       text: "Configuraciones",
       disabled: true,
       hasArrow: true,
@@ -58,14 +67,29 @@ const Sidebar = () => {
           );
         })}
       </div>
-      <div className="flex flex-col gap-2 mb-2">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2 hover:bg-gray-300"
-        >
-          <LogOut size={20} />
-          Cerrar sesión
-        </Button>
+      <div className="pl-2 pb-4 gap-2 flex flex-row items-center justify-between">
+        <div className="w-full flex items-center gap-2 flex-row">
+          <Avatar className="w-8 h-8 bg-secondary items-center justify-center">
+            <AvatarFallback className="text-xs">CN</AvatarFallback>
+          </Avatar>
+          <p className="text-sm">Franco Campaiola</p>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <EllipsisVertical size={15} className="cursor-pointer" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>
+              <Button
+                variant="ghost"
+                className="w-full flex items-center gap-2 cursor-pointer"
+              >
+                <LogOut size={15} />
+                Cerrar sesión
+              </Button>
+            </DropdownMenuLabel>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

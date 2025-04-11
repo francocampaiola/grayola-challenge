@@ -8,8 +8,8 @@ const Navbar = () => {
     <div className="w-full h-14 justify-between p-4 flex items-center">
       <Image src="/logo.png" alt="logo" width={150} height={100} />
       <div className="flex items-center gap-4">
-        <Button>Crear pedido</Button>
-        <BellDot size={20} />
+        <Button className="cursor-pointer">Crear pedido</Button>
+        <BellDot className="cursor-not-allowed" size={20} />
       </div>
     </div>
   );
