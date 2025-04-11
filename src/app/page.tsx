@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 export default function Home() {
@@ -20,9 +21,19 @@ export default function Home() {
             </code>
             .
           </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
+          <Button
+            variant={"outline"}
+            style={{
+              fontFamily: "var(--font-inter)",
+              fontWeight: 500,
+              fontSize: 16,
+              lineHeight: 1.5,
+              letterSpacing: 0.01,
+              color: "#000",
+            }}
+          >
+            Click me
+          </Button>
         </ol>
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
