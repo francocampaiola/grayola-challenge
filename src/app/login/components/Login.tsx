@@ -97,7 +97,7 @@ const Login = () => {
             )}
             <Button
               type="submit"
-              className="w-full mt-4 bg-[#90FE3D] text-black font-bold"
+              className="w-full mt-4 bg-[#90FE3D] text-black font-bold cursor-pointer hover:bg-[#720eec] hover:text-white"
               disabled={isPending}
             >
               {isPending ? "Signing in..." : "Sign In"} <ArrowRight />

@@ -1,3 +1,7 @@
+import { Button } from "@/components/ui/button";
+import { ChevronUp } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 const Dashboard = () => {
@@ -6,9 +10,34 @@ const Dashboard = () => {
       <div className="flex flex-col gap-4 p-4">
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold">Bienvenido, Franco</h1>
-          <div className="bg-white w-full h-40 rounded-lg">
-            <p className="ml-4 mt-2 font-semibold">Empezar</p>
-            
+          <div className="bg-white rounded-lg px-4 w-[85%]">
+            <div className="w-full h-12 flex items-center justify-between ">
+              <p className="font-semibold">Empezar</p>
+              <ChevronUp />
+            </div>
+            <hr className="border-gray-200" />
+            <div className="flex w-full items-center justify-between px-4">
+              <div className="my-4">
+                <p className="font-semibold">¡Comencemos!</p>
+                <p className="font-semibold mt-2">Crea tu primer pedido</p>
+                <p className="text-gray-500 mt-2">
+                  Mira un video de 2 minutos para empezar. Tu primer pedido en
+                  pocos pasos.
+                </p>
+                <Link
+                  href="https://www.youtube.com/watch?v=tfFnNi1iro4"
+                  target="_blank"
+                >
+                  <Button className="mt-4 cursor-pointer">Ver video</Button>
+                </Link>
+              </div>
+              <Image
+                src="/video_bg.jpeg"
+                alt="video"
+                width={200}
+                height={100}
+              />
+            </div>
           </div>
         </div>
       </div>

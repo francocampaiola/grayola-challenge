@@ -22,11 +22,18 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { DropdownMenuLabel } from "@radix-ui/react-dropdown-menu";
+import Link from "next/link";
 
 const Sidebar = () => {
   const menuItems = [
     { icon: Home, text: "Panel de Control", disabled: true, hasArrow: false },
-    { icon: Logs, text: "Pedidos", disabled: false, hasArrow: false },
+    {
+      icon: Logs,
+      text: "Pedidos",
+      disabled: false,
+      hasArrow: false,
+      href: "/dashboard/pedidos",
+    },
     { icon: Grid2x2, text: "Servicios", disabled: true, hasArrow: false },
     { icon: StickyNote, text: "Informes", disabled: true, hasArrow: true },
     { icon: ReceiptText, text: "Facturas", disabled: true, hasArrow: false },
@@ -45,25 +52,26 @@ const Sidebar = () => {
         {menuItems.map((item, index) => {
           const Icon = item.icon;
           return (
-            <Button
-              key={index}
-              variant="ghost"
-              className={`w-[200px] flex items-center justify-between hover:bg-transparent ${
-                item.disabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-gray-300 cursor-pointer"
-              }`}
-            >
-              <div className="flex items-center gap-2 text-left">
-                <Icon size={20} />
-                <span className="w-[120px] truncate text-left">
-                  {item.text}
-                </span>
-              </div>
-              <div className="flex-1 flex justify-end">
-                {item.hasArrow && <ChevronRight size={20} />}
-              </div>
-            </Button>
+            <Link href={item?.href || ""} key={index}>
+              <Button
+                variant="ghost"
+                className={`w-[200px] flex items-center justify-between hover:bg-transparent ${
+                  item.disabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-300 cursor-pointer"
+                }`}
+              >
+                <div className="flex items-center gap-2 text-left">
+                  <Icon size={20} />
+                  <span className="w-[120px] truncate text-left">
+                    {item.text}
+                  </span>
+                </div>
+                <div className="flex-1 flex justify-end">
+                  {item.hasArrow && <ChevronRight size={20} />}
+                </div>
+              </Button>
+            </Link>
           );
         })}
       </div>
