@@ -43,7 +43,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Si hay sesión y estamos en la página de login, redirigir a dashboard
+  // Si hay sesión y estamos en la página de login, redirigir a dashboard. Nunca a la pantalla de bienvenida
+  if (session && request.nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
   if (session && request.nextUrl.pathname.startsWith("/login")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
