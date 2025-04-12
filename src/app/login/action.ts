@@ -10,16 +10,21 @@ export const login = async ({
   email: string;
   password: string;
 }): Promise<IResponse<{ success: boolean }>> => {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+    if (error) {
+      console.error("Error de autenticación:", error);
+      return { errorMessage: error.message };
+    }
 
-  if (error) {
-    return { errorMessage: error.message };
+    return { data: { success: true } };
+  } catch (error) {
+    console.error("Error inesperado:", error);
+    return { errorMessage: "Ocurrió un error inesperado" };
   }
-
-  return { data: { success: true } };
 };

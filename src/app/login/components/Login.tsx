@@ -18,7 +18,7 @@ const Login = () => {
 
   const PasswordSchema = z.object({
     email: z.string().email(),
-    password: z.string().min(8),
+    password: z.string(),
   });
 
   const methods = useForm({

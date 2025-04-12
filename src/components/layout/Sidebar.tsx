@@ -23,8 +23,15 @@ import {
 } from "../ui/dropdown-menu";
 import { DropdownMenuLabel } from "@radix-ui/react-dropdown-menu";
 import Link from "next/link";
+import { useUser } from "@/hooks/useUser";
+import { Skeleton } from "../ui/skeleton";
+import { handleLogout } from "@/app/actions";
+import { useRouter } from "next/navigation";
 
 const Sidebar = () => {
+  const { user, loading } = useUser();
+  const router = useRouter();
+
   const menuItems = [
     {
       icon: Home,
@@ -51,6 +58,15 @@ const Sidebar = () => {
       hasArrow: true,
     },
   ];
+
+  const onLogout = async () => {
+    try {
+      await handleLogout();
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+      router.replace("/login");
+    }
+  };
 
   return (
     <div className="flex flex-col justify-between w-[220px] pl-2 pt-2 pr-2 border-r border-gray-300">
@@ -83,10 +99,20 @@ const Sidebar = () => {
       </div>
       <div className="pl-2 pb-4 gap-2 flex flex-row items-center justify-between">
         <div className="w-full flex items-center gap-2 flex-row">
-          <Avatar className="w-8 h-8 bg-secondary items-center justify-center">
-            <AvatarFallback className="text-xs">CN</AvatarFallback>
-          </Avatar>
-          <p className="text-sm">Franco Campaiola</p>
+          {loading ? (
+            <Skeleton className="w-8 h-8 rounded-full" />
+          ) : (
+            <Avatar className="w-8 h-8 bg-secondary items-center justify-center">
+              <AvatarFallback className="text-xs">
+                {user?.full_name?.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+          )}
+          {loading ? (
+            <Skeleton className="w-20 h-4 rounded-full" />
+          ) : (
+            <p className="text-sm">{user?.full_name}</p>
+          )}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -97,6 +123,7 @@ const Sidebar = () => {
               <Button
                 variant="ghost"
                 className="w-full flex items-center gap-2 cursor-pointer"
+                onClick={onLogout}
               >
                 <LogOut size={15} />
                 Cerrar sesión
