@@ -2,13 +2,16 @@ import Image from "next/image";
 import React from "react";
 import { Button } from "../ui/button";
 import { BellDot } from "lucide-react";
+import Link from "next/link";
 
 const Navbar = () => {
   return (
     <div className="w-full h-14 justify-between p-4 flex items-center">
       <Image src="/logo.png" alt="logo" width={150} height={100} />
       <div className="flex items-center gap-4">
-        <Button className="cursor-pointer">Crear pedido</Button>
+        <Link href="/dashboard/pedidos/crear">
+          <Button className="cursor-pointer">Crear pedido</Button>
+        </Link>
         <BellDot className="cursor-not-allowed" size={20} />
       </div>
     </div>

@@ -32,10 +32,7 @@ const Pedidos = () => {
           <TableRow className="bg-white hover:bg-white">
             <TableCell>
               <div className="flex flex-col">
-                <div className="flex items-center gap-0 -ml-2">
-                  <Dot style={{ transform: "scale(1)", marginRight: "-4px" }} />
-                  <p className="font-bold">Carrousel de piezas gráficas</p>
-                </div>
+                <p className="font-bold">Carrousel de piezas gráficas</p>
                 <p className="text-xs text-gray-400">
                   Diseño para redes sociales
                 </p>

@@ -26,7 +26,13 @@ import Link from "next/link";
 
 const Sidebar = () => {
   const menuItems = [
-    { icon: Home, text: "Panel de Control", disabled: true, hasArrow: false },
+    {
+      icon: Home,
+      text: "Panel de Control",
+      disabled: false,
+      hasArrow: false,
+      href: "/dashboard",
+    },
     {
       icon: Logs,
       text: "Pedidos",
