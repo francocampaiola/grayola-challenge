@@ -35,3 +35,11 @@ export const listFiles = async (path: string) => {
   }
   return data;
 };
+
+export const deleteFile = async (path: string) => {
+  const supabase = createClient();
+  const { error } = await supabase.storage.from("pedidos").remove([path]);
+  if (error) {
+    throw error;
+  }
+};

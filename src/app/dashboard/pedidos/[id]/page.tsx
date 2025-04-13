@@ -1,13 +1,43 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { getFileUrl, listFiles } from "@/utils/supabase/storage";
-import { useProject } from "@/hooks/projects/useProjects";
+import React, { useEffect, useState, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+import {
+  getFileUrl,
+  listFiles,
+  uploadFile,
+  deleteFile,
+} from "@/utils/supabase/storage";
+import {
+  useProject,
+  useUpdateProject,
+  useDeleteProject,
+} from "@/hooks/projects/useProjects";
+import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { CircleCheck, Download, File, LoaderIcon } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  CircleCheck,
+  Download,
+  File,
+  LoaderIcon,
+  Save,
+  Upload,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
 
 interface File {
   name: string;
@@ -16,12 +46,30 @@ interface File {
 
 const PedidoId = () => {
   const params = useParams();
+  const router = useRouter();
+  const updateProject = useUpdateProject();
+  const deleteProject = useDeleteProject();
   const id = Number(params.id);
-
+  const { user } = useUser();
   const { data, isLoading } = useProject(id);
-
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedData, setEditedData] = useState({
+    title: "",
+    description: "",
+  });
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (data) {
+      setEditedData({
+        title: data.title || "",
+        description: data.description || "",
+      });
+    }
+  }, [data]);
 
   useEffect(() => {
     const loadFiles = async () => {
@@ -29,16 +77,13 @@ const PedidoId = () => {
         setLoading(false);
         return;
       }
-
       try {
         const storageFiles = await listFiles(data.storage_path);
-
         if (!storageFiles || storageFiles.length === 0) {
           setFiles([]);
           setLoading(false);
           return;
         }
-
         const filesWithUrls = await Promise.all(
           storageFiles.map(async (file) => {
             const url = await getFileUrl(
@@ -51,7 +96,6 @@ const PedidoId = () => {
             };
           })
         );
-
         setFiles(filesWithUrls);
       } catch (error) {
         console.error(error);
@@ -66,8 +110,76 @@ const PedidoId = () => {
     }
   }, [data]);
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    if (!data?.storage_path) {
+      toast.error("No se puede subir archivos en este momento");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      for (const file of selectedFiles) {
+        if (file.size > 50 * 1024 * 1024) {
+          toast.error(`El archivo ${file.name} excede el límite de 50MB`);
+          continue;
+        }
+
+        const path = `${data.storage_path}/${file.name}`;
+        await uploadFile(file, path);
+        const url = await getFileUrl(path, true);
+        setFiles((prev) => [...prev, { name: file.name, url }]);
+      }
+      toast.success("Archivos subidos correctamente");
+    } catch (error) {
+      console.error("Error al subir archivos:", error);
+      toast.error("Error al subir los archivos");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleDeleteFile = async (fileName: string) => {
+    try {
+      await deleteFile(`${data?.storage_path}/${fileName}`);
+      setFiles((prev) => prev.filter((f) => f.name !== fileName));
+      toast.success("Archivo eliminado correctamente");
+    } catch (error) {
+      console.error("Error al eliminar archivo:", error);
+      toast.error("Error al eliminar el archivo");
+    }
+  };
+
   const downloadFile = (url: string) => {
     window.open(url, "_blank");
+  };
+
+  const handleSave = async () => {
+    try {
+      await updateProject.mutateAsync({
+        projectId: id,
+        data: editedData,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error al actualizar el proyecto:", error);
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    try {
+      await deleteProject.mutateAsync(id);
+      toast.success("Proyecto marcado como eliminado correctamente");
+      router.push("/dashboard/pedidos");
+    } catch (error) {
+      console.error("Error al marcar el proyecto como eliminado:", error);
+      toast.error("Error al marcar el proyecto como eliminado");
+    }
   };
 
   if (isLoading) {
@@ -78,6 +190,8 @@ const PedidoId = () => {
     );
   }
 
+  const isPM = user?.role_id === 2;
+
   return (
     <div>
       <div className="mx-auto w-full flex items-center justify-center">
@@ -86,18 +200,47 @@ const PedidoId = () => {
 
       <div className="w-[60%] mx-auto">
         <div>
-          <p className="font-bold mb-2 mt-4">Titulo del pedido</p>
-          <Input disabled value={data?.title} />
+          <div className="flex justify-between items-center">
+            <p className="font-bold mb-2 mt-4">Titulo del pedido</p>
+            {isPM && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                {isEditing ? "Cancelar" : "Editar"}
+              </Button>
+            )}
+          </div>
+          <Input
+            disabled={!isEditing}
+            value={isEditing ? editedData.title : data?.title}
+            onChange={(e) =>
+              setEditedData({ ...editedData, title: e.target.value })
+            }
+          />
         </div>
 
         <div className="mt-8">
           <p className="font-bold mb-2">Descripción del contenido</p>
           <Textarea
             style={{ height: "100px" }}
-            value={data?.description || ""}
-            disabled
+            disabled={!isEditing}
+            value={isEditing ? editedData.description : data?.description || ""}
+            onChange={(e) =>
+              setEditedData({ ...editedData, description: e.target.value })
+            }
           />
         </div>
+
+        {isEditing && (
+          <div className="mt-4 flex justify-end">
+            <Button onClick={handleSave} disabled={updateProject.isPending}>
+              <Save className="w-4 h-4 mr-2" />
+              Guardar cambios
+            </Button>
+          </div>
+        )}
 
         <div className="mt-8">
           <p className="font-bold mb-2">Diseñadores asignados</p>
@@ -135,9 +278,29 @@ const PedidoId = () => {
         </div>
 
         <div className="mt-8 mb-8">
-          <p className="font-bold mb-2">
-            Material audiovisual de apoyo y/o referentes
-          </p>
+          <div className="flex justify-between items-center">
+            <p className="font-bold mb-2">
+              Material audiovisual de apoyo y/o referentes
+            </p>
+            {isPM && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Subir archivos
+              </Button>
+            )}
+          </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            className="hidden"
+            multiple
+          />
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 mt-4">
             {loading ? (
               <div className="flex justify-center items-center">
@@ -160,14 +323,26 @@ const PedidoId = () => {
                         {file.name}
                       </span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => downloadFile(file.url)}
-                      className="hover:bg-gray-200 cursor-pointer"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => downloadFile(file.url)}
+                        className="hover:bg-gray-200 cursor-pointer"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      {isPM && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteFile(file.name)}
+                          className="hover:bg-gray-200 cursor-pointer"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -175,7 +350,57 @@ const PedidoId = () => {
           </div>
         </div>
         <div className="pb-12 flex justify-end">
-          <Button variant="destructive">Eliminar proyecto</Button>
+          {isPM && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  className="text-white cursor-pointer"
+                  disabled={deleteProject.isPending}
+                >
+                  {deleteProject.isPending ? (
+                    <>
+                      <LoaderIcon className="w-4 h-4 mr-2 animate-spin" />
+                      Eliminando proyecto...
+                    </>
+                  ) : (
+                    "Eliminar proyecto"
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Estás a punto de eliminar el proyecto y no se mostrará más
+                    en la lista de proyectos activos.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel
+                    disabled={deleteProject.isPending}
+                    className="cursor-pointer"
+                  >
+                    Cancelar
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteProject}
+                    className="text-white bg-destructive cursor-pointer hover:bg-destructive/90"
+                    disabled={deleteProject.isPending}
+                  >
+                    {deleteProject.isPending ? (
+                      <>
+                        <LoaderIcon className="w-4 h-4 mr-2 animate-spin" />
+                        Eliminando...
+                      </>
+                    ) : (
+                      "Eliminar proyecto"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </div>
     </div>

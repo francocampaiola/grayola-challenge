@@ -174,7 +174,16 @@ const Pedidos = () => {
           <TableRow className="h-10 flex items-center  rounded-lg">
             <TableCell>
               <p className="text-xs">
-                Mostrando {data?.length} de {data?.length}
+                Mostrando{" "}
+                {
+                  data?.filter((project) => project.project_status === "open")
+                    .length
+                }{" "}
+                de{" "}
+                {
+                  data?.filter((project) => project.project_status === "open")
+                    .length
+                }
               </p>
             </TableCell>
           </TableRow>

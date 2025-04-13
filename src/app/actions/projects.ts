@@ -106,7 +106,7 @@ export async function deleteProject(projectId: number): Promise<void> {
 
   const { error } = await supabase
     .from("projects")
-    .delete()
+    .update({ project_status: "deleted" })
     .eq("id", projectId);
 
   if (error) throw error;
