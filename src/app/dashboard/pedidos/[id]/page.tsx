@@ -11,6 +11,7 @@ import {
   useProject,
   useUpdateProject,
   useDeleteProject,
+  useAssignDesigners,
 } from "@/hooks/projects/useProjects";
 import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,8 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Check } from "lucide-react";
+import { useDesigners } from "@/hooks/users/useUsers";
 
 interface File {
   name: string;
@@ -49,6 +52,7 @@ const PedidoId = () => {
   const router = useRouter();
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
+  const assignDesigners = useAssignDesigners();
   const id = Number(params.id);
   const { user } = useUser();
   const { data, isLoading } = useProject(id);
@@ -61,6 +65,8 @@ const PedidoId = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: designers } = useDesigners(id);
+  const [selectedDesigners, setSelectedDesigners] = useState<string[]>([]);
 
   useEffect(() => {
     if (data) {
@@ -68,6 +74,21 @@ const PedidoId = () => {
         title: data.title || "",
         description: data.description || "",
       });
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (data?.project_designers) {
+      const designerIds = data.project_designers
+        .filter(
+          (
+            pd
+          ): pd is {
+            designer: { id: string; full_name: string | null; email: string };
+          } => pd.designer !== null && pd.designer !== undefined
+        )
+        .map((pd) => pd.designer.id);
+      setSelectedDesigners(designerIds);
     }
   }, [data]);
 
@@ -182,6 +203,27 @@ const PedidoId = () => {
     }
   };
 
+  const handleDesignerSelect = async (designerId: string) => {
+    const newSelectedDesigners = selectedDesigners.includes(designerId)
+      ? selectedDesigners.filter((id) => id !== designerId)
+      : [...selectedDesigners, designerId];
+
+    setSelectedDesigners(newSelectedDesigners);
+
+    try {
+      await assignDesigners.mutateAsync({
+        projectId: id,
+        designerIds: newSelectedDesigners,
+      });
+      toast.success("Diseñadores actualizados correctamente");
+    } catch (error) {
+      console.error("Error al actualizar diseñadores:", error);
+      toast.error("Error al actualizar diseñadores");
+      // Revertir el cambio en caso de error
+      setSelectedDesigners(selectedDesigners);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -233,48 +275,101 @@ const PedidoId = () => {
           />
         </div>
 
-        {isEditing && (
-          <div className="mt-4 flex justify-end">
-            <Button onClick={handleSave} disabled={updateProject.isPending}>
-              <Save className="w-4 h-4 mr-2" />
-              Guardar cambios
-            </Button>
-          </div>
-        )}
-
         <div className="mt-8">
-          <p className="font-bold mb-2">Diseñadores asignados</p>
-          <div className="flex flex-wrap gap-4">
-            {data?.project_designers?.length ? (
-              data.project_designers.map((pd, index) => (
-                <div key={pd.designer.id} className="flex items-center gap-2">
-                  <Avatar className="w-10 h-10">
-                    <AvatarFallback
-                      style={{
-                        fontSize: "14px",
-                        backgroundColor:
-                          index === 0
-                            ? "#FF6B6B"
-                            : index === 1
-                            ? "#4ECDC4"
-                            : "#45B7D1",
-                        color: "white",
-                      }}
-                    >
-                      {pd.designer.full_name?.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium">
-                    {pd.designer.full_name}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <span className="text-sm text-gray-500">
-                No hay diseñadores asignados
-              </span>
-            )}
+          <div className="flex justify-between items-center">
+            <p className="font-bold mb-2">Diseñadores asignados</p>
           </div>
+          {isEditing ? (
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {designers?.map((designer) => (
+                  <div
+                    key={designer.id}
+                    className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer ${
+                      selectedDesigners.includes(designer.id)
+                        ? "bg-green-100 border-2 border-green-500"
+                        : "bg-gray-100 hover:bg-gray-200"
+                    }`}
+                    onClick={() => handleDesignerSelect(designer.id)}
+                  >
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback
+                        style={{
+                          fontSize: "12px",
+                          backgroundColor: selectedDesigners.includes(
+                            designer.id
+                          )
+                            ? "#4CAF50"
+                            : "#9E9E9E",
+                          color: "white",
+                        }}
+                      >
+                        {designer.full_name?.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        {designer.full_name}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {designer.email}
+                      </span>
+                    </div>
+                    {selectedDesigners.includes(designer.id) && (
+                      <Check className="w-4 h-4 text-green-500" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-4">
+              {(data?.project_designers?.length ?? 0) > 0 ? (
+                data?.project_designers
+                  ?.filter(
+                    (
+                      pd
+                    ): pd is {
+                      designer: {
+                        id: string;
+                        full_name: string | null;
+                        email: string;
+                      };
+                    } => pd.designer !== null && pd.designer !== undefined
+                  )
+                  .map((pd) => (
+                    <div
+                      key={pd.designer.id}
+                      className="flex items-center gap-2 p-2 rounded-lg bg-gray-100"
+                    >
+                      <Avatar className="w-8 h-8">
+                        <AvatarFallback
+                          style={{
+                            fontSize: "12px",
+                            backgroundColor: "#4CAF50",
+                            color: "white",
+                          }}
+                        >
+                          {pd.designer.full_name?.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                          {pd.designer.full_name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {pd.designer.email}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                <p className="text-sm text-gray-500">
+                  No hay diseñadores asignados
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="mt-8 mb-8">
@@ -349,7 +444,7 @@ const PedidoId = () => {
             )}
           </div>
         </div>
-        <div className="pb-12 flex justify-end">
+        <div className="pb-12 flex justify-end gap-4">
           {isPM && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -400,6 +495,12 @@ const PedidoId = () => {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+          )}
+          {isEditing && (
+            <Button onClick={handleSave} disabled={updateProject.isPending}>
+              <Save className="w-4 h-4 mr-2" />
+              Guardar cambios
+            </Button>
           )}
         </div>
       </div>

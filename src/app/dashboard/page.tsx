@@ -1,15 +1,27 @@
+"use client";
 import { Button } from "@/components/ui/button";
-import { ChevronUp } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
+import { ChevronUp, LoaderIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
 const Dashboard = () => {
+  const { user, loading } = useUser();
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <LoaderIcon className="animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-100 h-full border-t border-gray-100">
       <div className="flex flex-col gap-4 p-4">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold">Bienvenido, Franco</h1>
+          <h1 className="text-2xl font-bold">Bienvenido, {user?.full_name}</h1>
           <div className="bg-white rounded-lg px-4 w-[85%]">
             <div className="w-full h-12 flex items-center justify-between ">
               <p className="font-semibold">Empezar</p>

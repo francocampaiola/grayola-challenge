@@ -53,3 +53,47 @@ export async function getCurrentUser(): Promise<Tables<"users"> | null> {
 
   return user;
 }
+
+export async function getDesigners(
+  projectId?: number
+): Promise<(Tables<"users"> & { is_assigned: boolean })[]> {
+  const supabase = await createClient();
+  console.log("Iniciando getDesigners con projectId:", projectId);
+
+  // Obtener solo usuarios con rol de diseñador (role_id = 3)
+  const { data: designers, error: designersError } = await supabase
+    .from("users")
+    .select("*")
+    .eq("role_id", 3);
+
+  if (designersError) {
+    console.error("Error al obtener diseñadores:", designersError);
+    return [];
+  }
+
+  if (!projectId) {
+    console.log(
+      "No hay projectId, retornando todos los diseñadores sin asignación"
+    );
+    return designers.map((designer) => ({ ...designer, is_assigned: false }));
+  }
+
+  // Obtener los IDs de los diseñadores asignados al proyecto
+  const { data: assignedDesigners, error: assignedError } = await supabase
+    .from("project_designers")
+    .select("designer_id")
+    .eq("project_id", projectId);
+
+  if (assignedError) {
+    console.error("Error al obtener diseñadores asignados:", assignedError);
+    return designers.map((designer) => ({ ...designer, is_assigned: false }));
+  }
+
+  const assignedDesignerIds = assignedDesigners.map((d) => d.designer_id);
+
+  // Marcar los diseñadores asignados
+  return designers.map((designer) => ({
+    ...designer,
+    is_assigned: assignedDesignerIds.includes(designer.id),
+  }));
+}
