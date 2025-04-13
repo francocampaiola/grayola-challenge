@@ -199,7 +199,7 @@ const PedidoId = () => {
   const handleDeleteProject = async () => {
     try {
       await deleteProject.mutateAsync(id);
-      toast.success("Proyecto marcado como eliminado correctamente");
+      toast.success("Proyecto eliminado correctamente");
       router.push("/dashboard/pedidos");
     } catch (error) {
       console.error("Error al marcar el proyecto como eliminado:", error);
@@ -484,7 +484,14 @@ const PedidoId = () => {
           {isEditing && (
             <Button onClick={handleSave} disabled={updateProject.isPending}>
               <Save className="w-4 h-4 mr-2" />
-              Guardar cambios
+              {updateProject.isPending ? (
+                <>
+                  <LoaderIcon className="w-4 h-4 mr-2 animate-spin" />
+                  Guardando cambios...
+                </>
+              ) : (
+                "Guardar cambios"
+              )}
             </Button>
           )}
         </div>

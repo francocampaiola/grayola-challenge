@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { uploadFile } from "@/utils/supabase/storage";
 import { Button } from "@/components/ui/button";
