@@ -2,7 +2,6 @@ import { createClient } from "./client";
 
 export const uploadFile = async (file: File, path: string) => {
   const supabase = createClient();
-
   const { data, error } = await supabase.storage
     .from("pedidos")
     .upload(path, file);
@@ -10,11 +9,29 @@ export const uploadFile = async (file: File, path: string) => {
   if (error) {
     throw error;
   }
-
   return data;
 };
 
-export const getFileUrl = (path: string) => {
+export const getFileUrl = async (path: string, signed: boolean = false) => {
   const supabase = createClient();
-  return supabase.storage.from("pedidos").getPublicUrl(path);
+  if (signed) {
+    const { data } = await supabase.storage
+      .from("pedidos")
+      .createSignedUrl(path, 3600);
+    if (!data) {
+      throw new Error("No se pudo generar la URL firmada");
+    }
+    return data.signedUrl;
+  }
+  const { data } = supabase.storage.from("pedidos").getPublicUrl(path);
+  return data.publicUrl;
+};
+
+export const listFiles = async (path: string) => {
+  const supabase = createClient();
+  const { data, error } = await supabase.storage.from("pedidos").list(path);
+  if (error) {
+    throw error;
+  }
+  return data;
 };
