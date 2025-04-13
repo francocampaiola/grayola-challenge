@@ -34,9 +34,7 @@ const ALLOWED_FILE_TYPES = [
 ];
 
 const CrearPedido = () => {
-  const router = useRouter();
-  const { user, loading } = useUser();
-  const createProject = useCreateProject();
+  // ESTADOS
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
@@ -48,14 +46,18 @@ const CrearPedido = () => {
     description: "",
     files: "",
   });
+
+  // HOOKS REACT
+  const router = useRouter();
+
+  // CUSTOM HOOKS
+  const { user, loading } = useUser();
+  const createProject = useCreateProject();
+
+  // Ref para el input de archivos
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
-
+  // Renderizado condicional si no se carga por algun motivo
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -68,6 +70,7 @@ const CrearPedido = () => {
     return null;
   }
 
+  // Funcion para validar el formulario
   const validateForm = () => {
     const newErrors = {
       title: "",
@@ -98,30 +101,6 @@ const CrearPedido = () => {
 
     setErrors(newErrors);
     return !Object.values(newErrors).some((error) => error !== "");
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    const validFiles = droppedFiles.filter((file) =>
-      ALLOWED_FILE_TYPES.includes(file.type)
-    );
-    if (validFiles.length !== droppedFiles.length) {
-      const invalidFiles = droppedFiles.filter(
-        (file) => !ALLOWED_FILE_TYPES.includes(file.type)
-      );
-      toast.error(
-        `Algunos archivos no son permitidos: ${invalidFiles
-          .map((f) => f.name)
-          .join(", ")}`
-      );
-    }
-    setFiles([...files, ...validFiles]);
-    setErrors((prev) => ({ ...prev, files: "" }));
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,41 +134,23 @@ const CrearPedido = () => {
 
   const handleUpload = async () => {
     if (!validateForm() || !user) {
-      console.log("Validación fallida o usuario no encontrado:", {
-        user,
-        formData,
-        files,
-      });
       return;
     }
 
     setUploading(true);
     try {
-      // Generamos un ID único para el proyecto
       const projectId = `pedido_${Date.now()}_${Math.random()
         .toString(36)
         .substring(2, 9)}`;
 
-      console.log("Creando proyecto con datos:", {
+      await createProject.mutateAsync({
         title: formData.title,
         description: formData.description,
         client_id: user.id,
         storage_path: projectId,
       });
 
-      // Primero creamos el proyecto
-      const project = await createProject.mutateAsync({
-        title: formData.title,
-        description: formData.description,
-        client_id: user.id,
-        storage_path: projectId,
-      });
-
-      console.log("Proyecto creado:", project);
-
-      // Luego subimos los archivos
       for (const file of files) {
-        console.log("Subiendo archivo:", file.name);
         await uploadFile(file, `${projectId}/${file.name}`);
       }
 
@@ -264,8 +225,6 @@ const CrearPedido = () => {
 
           <div
             className="border-2 border-dashed border-gray-300 rounded-lg p-8 mt-4 cursor-pointer"
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
             onClick={() => fileInputRef.current?.click()}
           >
             <input
@@ -280,8 +239,7 @@ const CrearPedido = () => {
                 <>
                   <Upload className="h-8 w-8 text-gray-400" />
                   <p className="text-xs text-gray-500">
-                    Arrastra y suelta tus archivos aquí, o haz clic para
-                    seleccionarlos
+                    Hacé clic para seleccionar los archivos
                   </p>
                 </>
               )}

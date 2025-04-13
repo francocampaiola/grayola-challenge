@@ -110,7 +110,6 @@ export async function assignDesignersToProject(
   const supabase = await createClient();
 
   try {
-    // Verificar si el usuario es PM
     const {
       data: { user: authUser },
       error: authError,
@@ -128,7 +127,6 @@ export async function assignDesignersToProject(
       .single();
 
     if (userError || !user || user.role_id !== 2) {
-      console.error("Error de permisos:", { userError, user });
       throw new Error("No tienes permisos para asignar diseñadores");
     }
 
@@ -139,7 +137,6 @@ export async function assignDesignersToProject(
       .single();
 
     if (projectError || !project) {
-      console.error("Error al buscar proyecto:", projectError);
       throw new Error("Proyecto no encontrado");
     }
 

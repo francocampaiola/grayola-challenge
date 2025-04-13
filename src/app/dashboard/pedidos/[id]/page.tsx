@@ -8,6 +8,7 @@ import {
   useDeleteProject,
   useAssignDesigners,
 } from "@/hooks/projects/useProjects";
+import { useDesigners } from "@/hooks/users/useUsers";
 import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
-import { useDesigners } from "@/hooks/users/useUsers";
 
 interface File {
   name: string;
@@ -42,14 +42,11 @@ interface File {
 }
 
 const PedidoId = () => {
+  // HOOKS REACT
   const params = useParams();
   const router = useRouter();
-  const updateProject = useUpdateProject();
-  const deleteProject = useDeleteProject();
-  const assignDesigners = useAssignDesigners();
-  const id = Number(params.id);
-  const { user } = useUser();
-  const { data, isLoading } = useProject(id);
+
+  // ESTADOS
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({
     title: "",
@@ -58,10 +55,22 @@ const PedidoId = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { data: designers } = useDesigners(id);
   const [selectedDesigners, setSelectedDesigners] = useState<string[]>([]);
 
+  const id = Number(params.id);
+  const { data, isLoading } = useProject(id);
+
+  // CUSTOM HOOKS
+  const updateProject = useUpdateProject();
+  const deleteProject = useDeleteProject();
+  const assignDesigners = useAssignDesigners();
+  const { user } = useUser();
+  const { data: designers } = useDesigners(id);
+
+  // Ref para el input de archivos
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Efecto para setear los datos editados
   useEffect(() => {
     if (data) {
       setEditedData({
@@ -71,6 +80,7 @@ const PedidoId = () => {
     }
   }, [data]);
 
+  // Efecto para setear los diseñadores seleccionados antes de guardar
   useEffect(() => {
     if (data?.project_designers) {
       const designerIds = data.project_designers
@@ -86,6 +96,7 @@ const PedidoId = () => {
     }
   }, [data]);
 
+  // Efecto para cargar los archivos
   useEffect(() => {
     const loadFiles = async () => {
       if (!data?.storage_path) {
@@ -125,6 +136,7 @@ const PedidoId = () => {
     }
   }, [data]);
 
+  // Funcion para subir archivos
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     if (selectedFiles.length === 0) return;
@@ -159,10 +171,12 @@ const PedidoId = () => {
     }
   };
 
+  // Funcion para descargar archivos
   const downloadFile = (url: string) => {
     window.open(url, "_blank");
   };
 
+  // Funcion para guardar los cambios
   const handleSave = async () => {
     try {
       await updateProject.mutateAsync({
@@ -181,6 +195,7 @@ const PedidoId = () => {
     }
   };
 
+  // Funcion para eliminar el proyecto
   const handleDeleteProject = async () => {
     try {
       await deleteProject.mutateAsync(id);
@@ -192,6 +207,7 @@ const PedidoId = () => {
     }
   };
 
+  // Funcion para seleccionar diseñadores
   const handleDesignerSelect = (designerId: string) => {
     const newSelectedDesigners = selectedDesigners.includes(designerId)
       ? selectedDesigners.filter((id) => id !== designerId)
@@ -200,6 +216,7 @@ const PedidoId = () => {
     setSelectedDesigners(newSelectedDesigners);
   };
 
+  // Renderizado condicional si no se carga por algun motivo
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
