@@ -306,6 +306,7 @@ export type ProjectCreateInput = {
   description: string;
   client_id: string;
   storage_path?: string;
+  project_status?: "open" | "deleted";
 };
 
 export type ProjectUpdateInput = Partial<ProjectCreateInput>;
