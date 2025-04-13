@@ -54,6 +54,7 @@ export type Database = {
           created_at: string | null;
           description: string | null;
           id: number;
+          project_status: Database["public"]["Enums"]["project_status"] | null;
           storage_path: string | null;
           title: string;
           updated_at: string | null;
@@ -63,6 +64,7 @@ export type Database = {
           created_at?: string | null;
           description?: string | null;
           id?: number;
+          project_status?: Database["public"]["Enums"]["project_status"] | null;
           storage_path?: string | null;
           title: string;
           updated_at?: string | null;
@@ -72,6 +74,7 @@ export type Database = {
           created_at?: string | null;
           description?: string | null;
           id?: number;
+          project_status?: Database["public"]["Enums"]["project_status"] | null;
           storage_path?: string | null;
           title?: string;
           updated_at?: string | null;
@@ -156,7 +159,7 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
-      [_ in never]: never;
+      project_status: "open" | "deleted";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -271,27 +274,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      project_status: ["open", "deleted"],
+    },
   },
 } as const;
 
-export type Order = {
-  id: string;
-  user_id: string;
-  status: "pending" | "in_progress" | "completed" | "cancelled";
-  total: number;
-  created_at: string;
-  updated_at: string;
-};
-
-export type Service = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  created_at: string;
-  updated_at: string;
-};
+export interface IResponse<T> {
+  data?: T;
+  errorMessage?: string | string[];
+  successMessage?: string;
+}
 
 export type Project = Tables<"projects"> & {
   client?: {

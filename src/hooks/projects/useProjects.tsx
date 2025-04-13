@@ -7,7 +7,7 @@ import {
   deleteProject,
   assignDesignersToProject,
 } from "@/app/actions/projects";
-import { Project, ProjectCreateInput, ProjectUpdateInput } from "@/app/types";
+import { Project, ProjectCreateInput, ProjectUpdateInput } from "@/types";
 
 export const useProjects = (userId?: string) => {
   return useQuery<Project[]>({

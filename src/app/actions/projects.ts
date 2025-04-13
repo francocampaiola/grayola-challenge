@@ -1,6 +1,6 @@
 "use server";
 import { createClient } from "@/utils/supabase/server";
-import { Project, ProjectCreateInput, ProjectUpdateInput } from "@/app/types";
+import { Project, ProjectCreateInput, ProjectUpdateInput } from "@/types";
 
 export async function getProjects(userId?: string): Promise<Project[]> {
   const supabase = await createClient();

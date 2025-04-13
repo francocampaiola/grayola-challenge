@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { IResponse } from "../types";
+import { IResponse } from "@/types";
 
 export const login = async ({
   email,

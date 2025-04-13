@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getCurrentUser } from "@/app/actions/users";
-import { Tables } from "@/app/types";
+import { Tables } from "@/types";
 
 export function useUser() {
   const [user, setUser] = useState<Tables<"users"> | null>(null);

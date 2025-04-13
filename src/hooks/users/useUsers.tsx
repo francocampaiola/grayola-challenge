@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getUsers, getUserById } from "@/app/actions/users";
-import { Tables } from "@/app/types";
+import { Tables } from "@/types";
 
 export const useUsers = () => {
   return useQuery<Tables<"users">[]>({

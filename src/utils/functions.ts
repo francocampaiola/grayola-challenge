@@ -1,5 +1,5 @@
 "use client";
-import { IResponse } from "@/app/types";
+import { IResponse } from "@/types";
 
 export const handleRequest = async <T>(
   request: () => Promise<IResponse<T>>

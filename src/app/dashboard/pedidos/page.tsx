@@ -21,8 +21,6 @@ const Pedidos = () => {
     return <div>Loading...</div>;
   }
 
-  console.log("Projects data:", data);
-
   return (
     <div className="p-4 ">
       <Table className="bg-gray-100 overflow-hidden">
@@ -54,7 +52,7 @@ const Pedidos = () => {
               <TableCell className="font-medium">#{project?.id}</TableCell>
               <TableCell>
                 <Badge className="bg-[#DFFAE6] text-[#257643] font-bold">
-                  Abierto
+                  {project?.project_status === "open" && "Abierto"}
                 </Badge>
               </TableCell>
               <TableCell>
