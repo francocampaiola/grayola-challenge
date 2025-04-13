@@ -47,13 +47,15 @@ const Login = () => {
       <form onSubmit={onSubmit}>
         <div className="flex items-center justify-center min-h-screen w-full bg-[#FFF8EE]">
           <div className="bg-[#FFFFFF] px-14 py-16 rounded-lg shadow-xl">
-            <Image
-              src={"/logo.png"}
-              width={200}
-              height={100}
-              alt="Logo"
-              className="mx-auto"
-            />
+            <div className="flex justify-center mb-8">
+              <Image 
+                src="/logo.png" 
+                alt="Logo" 
+                width={200} 
+                height={100}
+                priority
+              />
+            </div>
             <div className="text-center mt-8">
               <h1 className="text-4xl font-bold">Log In</h1>
               <h1 className="text-md mt-2">Continue to your account</h1>
