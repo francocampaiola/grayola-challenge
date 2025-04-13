@@ -152,6 +152,9 @@ const Pedidos = () => {
                     <DropdownMenuContent align="end" className="w-[160px]">
                       <DropdownMenuGroup>
                         <DropdownMenuItem className="cursor-pointer">
+                          Ver proyecto
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer">
                           Editar proyecto
                         </DropdownMenuItem>
                         <DropdownMenuItem className="cursor-pointer">
