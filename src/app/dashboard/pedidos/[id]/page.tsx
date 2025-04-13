@@ -219,7 +219,6 @@ const PedidoId = () => {
     } catch (error) {
       console.error("Error al actualizar diseñadores:", error);
       toast.error("Error al actualizar diseñadores");
-      // Revertir el cambio en caso de error
       setSelectedDesigners(selectedDesigners);
     }
   };

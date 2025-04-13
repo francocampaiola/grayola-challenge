@@ -110,17 +110,11 @@ export async function assignDesignersToProject(
   const supabase = await createClient();
 
   try {
-    console.log("Iniciando asignación de diseñadores:", {
-      projectId,
-      designerIds,
-    });
-
     // Verificar si el usuario es PM
     const {
       data: { user: authUser },
       error: authError,
     } = await supabase.auth.getUser();
-    console.log("Usuario autenticado:", authUser);
 
     if (authError || !authUser) {
       console.error("Error de autenticación:", authError);
@@ -133,49 +127,37 @@ export async function assignDesignersToProject(
       .eq("id", authUser.id)
       .single();
 
-    console.log("Datos del usuario:", user);
-
     if (userError || !user || user.role_id !== 2) {
       console.error("Error de permisos:", { userError, user });
       throw new Error("No tienes permisos para asignar diseñadores");
     }
 
-    // Verificar que el proyecto existe
     const { data: project, error: projectError } = await supabase
       .from("projects")
       .select("id")
       .eq("id", projectId)
       .single();
 
-    console.log("Datos del proyecto:", project);
-
     if (projectError || !project) {
       console.error("Error al buscar proyecto:", projectError);
       throw new Error("Proyecto no encontrado");
     }
 
-    // Eliminar las asignaciones existentes
     const { error: deleteError } = await supabase
       .from("project_designers")
       .delete()
       .eq("project_id", projectId);
 
     if (deleteError) {
-      console.error("Error al eliminar asignaciones:", deleteError);
       throw new Error("Error al eliminar asignaciones existentes");
     }
 
-    console.log("Asignaciones existentes eliminadas");
-
-    // Insertar las nuevas asignaciones
     if (designerIds.length > 0) {
       const newAssignments = designerIds.map((designerId) => ({
         project_id: projectId,
         designer_id: designerId,
         assigned_at: new Date().toISOString(),
       }));
-
-      console.log("Nuevas asignaciones a insertar:", newAssignments);
 
       const { error: insertError } = await supabase
         .from("project_designers")
@@ -185,10 +167,6 @@ export async function assignDesignersToProject(
         console.error("Error al insertar asignaciones:", insertError);
         throw new Error("Error al asignar diseñadores");
       }
-
-      console.log("Asignaciones insertadas correctamente");
-    } else {
-      console.log("No hay diseñadores para asignar");
     }
   } catch (error) {
     console.error("Error en assignDesignersToProject:", error);
