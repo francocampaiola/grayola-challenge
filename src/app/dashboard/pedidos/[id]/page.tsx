@@ -1,12 +1,7 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  getFileUrl,
-  listFiles,
-  uploadFile,
-  deleteFile,
-} from "@/utils/supabase/storage";
+import { getFileUrl, listFiles, uploadFile } from "@/utils/supabase/storage";
 import {
   useProject,
   useUpdateProject,
@@ -36,7 +31,6 @@ import {
   LoaderIcon,
   Save,
   Upload,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
@@ -165,17 +159,6 @@ const PedidoId = () => {
     }
   };
 
-  const handleDeleteFile = async (fileName: string) => {
-    try {
-      await deleteFile(`${data?.storage_path}/${fileName}`);
-      setFiles((prev) => prev.filter((f) => f.name !== fileName));
-      toast.success("Archivo eliminado correctamente");
-    } catch (error) {
-      console.error("Error al eliminar archivo:", error);
-      toast.error("Error al eliminar el archivo");
-    }
-  };
-
   const downloadFile = (url: string) => {
     window.open(url, "_blank");
   };
@@ -186,9 +169,15 @@ const PedidoId = () => {
         projectId: id,
         data: editedData,
       });
+      await assignDesigners.mutateAsync({
+        projectId: id,
+        designerIds: selectedDesigners,
+      });
       setIsEditing(false);
+      toast.success("Cambios guardados correctamente");
     } catch (error) {
       console.error("Error al actualizar el proyecto:", error);
+      toast.error("Error al guardar los cambios");
     }
   };
 
@@ -203,24 +192,12 @@ const PedidoId = () => {
     }
   };
 
-  const handleDesignerSelect = async (designerId: string) => {
+  const handleDesignerSelect = (designerId: string) => {
     const newSelectedDesigners = selectedDesigners.includes(designerId)
       ? selectedDesigners.filter((id) => id !== designerId)
       : [...selectedDesigners, designerId];
 
     setSelectedDesigners(newSelectedDesigners);
-
-    try {
-      await assignDesigners.mutateAsync({
-        projectId: id,
-        designerIds: newSelectedDesigners,
-      });
-      toast.success("Diseñadores actualizados correctamente");
-    } catch (error) {
-      console.error("Error al actualizar diseñadores:", error);
-      toast.error("Error al actualizar diseñadores");
-      setSelectedDesigners(selectedDesigners);
-    }
   };
 
   if (isLoading) {
@@ -411,31 +388,23 @@ const PedidoId = () => {
                     key={file.name}
                     className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <File className="h-2 text-gray-500" />
-                      <span className="text-sm text-gray-700 truncate max-w-[200px]">
-                        {file.name}
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <File className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm text-gray-700 truncate">
+                        {file.name.length > 20
+                          ? `${file.name.substring(0, 10)}...`
+                          : file.name}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 ml-2">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => downloadFile(file.url)}
-                        className="hover:bg-gray-200 cursor-pointer"
+                        className="h-8 w-8 p-0 hover:bg-gray-200 cursor-pointer"
                       >
                         <Download className="h-4 w-4" />
                       </Button>
-                      {isPM && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteFile(file.name)}
-                          className="hover:bg-gray-200 cursor-pointer"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
                     </div>
                   </div>
                 ))}

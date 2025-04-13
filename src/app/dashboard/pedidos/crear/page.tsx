@@ -1,37 +1,123 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { uploadFile } from "@/utils/supabase/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { CircleCheck, CircleDot, Upload, X } from "lucide-react";
+import {
+  CircleCheck,
+  CircleDot,
+  Upload,
+  X,
+  LoaderIcon,
+  File,
+} from "lucide-react";
+import { useCreateProject } from "@/hooks/projects/useProjects";
+import { useUser } from "@/hooks/useUser";
+import { useRouter } from "next/navigation";
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const ALLOWED_FILE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+  "video/quicktime",
+  "video/x-msvideo",
+  "audio/mpeg",
+  "audio/wav",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
 
 const CrearPedido = () => {
+  const router = useRouter();
+  const { user, loading } = useUser();
+  const createProject = useCreateProject();
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+  });
+  const [errors, setErrors] = useState({
+    title: "",
+    description: "",
+    files: "",
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <LoaderIcon className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  const validateForm = () => {
+    const newErrors = {
+      title: "",
+      description: "",
+      files: "",
+    };
+
+    if (!formData.title.trim()) {
+      newErrors.title = "El título es requerido";
+    }
+    if (!formData.description.trim()) {
+      newErrors.description = "La descripción es requerida";
+    }
+    if (files.length === 0) {
+      newErrors.files = "Debes subir al menos un archivo";
+    } else {
+      const invalidFiles = files.filter(
+        (file) => !ALLOWED_FILE_TYPES.includes(file.type)
+      );
+      if (invalidFiles.length > 0) {
+        newErrors.files = `Los siguientes archivos no son permitidos: ${invalidFiles
+          .map((f) => f.name)
+          .join(
+            ", "
+          )}. Formatos permitidos: imágenes (JPEG, PNG, GIF, WEBP), videos (MP4, MOV, AVI), audio (MP3, WAV), documentos (PDF, DOC, DOCX)`;
+      }
+    }
+
+    setErrors(newErrors);
+    return !Object.values(newErrors).some((error) => error !== "");
+  };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const droppedFiles = Array.from(e.dataTransfer.files);
-
-    const oversizedFiles = droppedFiles.filter(
-      (file) => file.size > MAX_FILE_SIZE
+    const validFiles = droppedFiles.filter((file) =>
+      ALLOWED_FILE_TYPES.includes(file.type)
     );
-    if (oversizedFiles.length > 0) {
+    if (validFiles.length !== droppedFiles.length) {
+      const invalidFiles = droppedFiles.filter(
+        (file) => !ALLOWED_FILE_TYPES.includes(file.type)
+      );
       toast.error(
-        `Los siguientes archivos exceden el límite de 50MB: ${oversizedFiles
+        `Algunos archivos no son permitidos: ${invalidFiles
           .map((f) => f.name)
           .join(", ")}`
       );
-      return;
     }
-
-    setFiles([...files, ...droppedFiles]);
+    setFiles([...files, ...validFiles]);
+    setErrors((prev) => ({ ...prev, files: "" }));
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -40,20 +126,21 @@ const CrearPedido = () => {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
-
-    const oversizedFiles = selectedFiles.filter(
-      (file) => file.size > MAX_FILE_SIZE
+    const validFiles = selectedFiles.filter((file) =>
+      ALLOWED_FILE_TYPES.includes(file.type)
     );
-    if (oversizedFiles.length > 0) {
+    if (validFiles.length !== selectedFiles.length) {
+      const invalidFiles = selectedFiles.filter(
+        (file) => !ALLOWED_FILE_TYPES.includes(file.type)
+      );
       toast.error(
-        `Los siguientes archivos exceden el límite de 50MB: ${oversizedFiles
+        `Algunos archivos no son permitidos: ${invalidFiles
           .map((f) => f.name)
           .join(", ")}`
       );
-      return;
     }
-
-    setFiles([...files, ...selectedFiles]);
+    setFiles([...files, ...validFiles]);
+    setErrors((prev) => ({ ...prev, files: "" }));
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -67,24 +154,50 @@ const CrearPedido = () => {
   };
 
   const handleUpload = async () => {
-    if (files.length === 0) {
-      toast.error("Por favor, seleccioná al menos un archivo");
+    if (!validateForm() || !user) {
+      console.log("Validación fallida o usuario no encontrado:", {
+        user,
+        formData,
+        files,
+      });
       return;
     }
 
     setUploading(true);
-
-    // FUNCIÓN DE PRUEBA PARA SUBIR ARCHIVOS
-    // TODO: Quitar esta función y usar la de arriba
     try {
-      const pedidoId = `pedido_${Date.now()}_${Math.random().toString(36)}`;
+      // Generamos un ID único para el proyecto
+      const projectId = `pedido_${Date.now()}_${Math.random()
+        .toString(36)
+        .substring(2, 9)}`;
+
+      console.log("Creando proyecto con datos:", {
+        title: formData.title,
+        description: formData.description,
+        client_id: user.id,
+        storage_path: projectId,
+      });
+
+      // Primero creamos el proyecto
+      const project = await createProject.mutateAsync({
+        title: formData.title,
+        description: formData.description,
+        client_id: user.id,
+        storage_path: projectId,
+      });
+
+      console.log("Proyecto creado:", project);
+
+      // Luego subimos los archivos
       for (const file of files) {
-        await uploadFile(file, `${pedidoId}/${file.name}`);
+        console.log("Subiendo archivo:", file.name);
+        await uploadFile(file, `${projectId}/${file.name}`);
       }
-      toast.success("Archivos subidos correctamente");
-      setFiles([]);
+
+      toast.success("Pedido creado correctamente");
+      router.push("/dashboard/pedidos");
     } catch (error) {
-      console.error("Error al subir los archivos:", error);
+      console.error("Error al crear el pedido:", error);
+      toast.error("Error al crear el pedido");
     } finally {
       setUploading(false);
     }
@@ -105,7 +218,16 @@ const CrearPedido = () => {
             <p className="font-bold">Titulo del pedido</p>
             <p className="text-sm text-gray-500">(Requerido)</p>
           </div>
-          <Input />
+          <Input
+            value={formData.title}
+            onChange={(e) => {
+              setFormData({ ...formData, title: e.target.value });
+              setErrors((prev) => ({ ...prev, title: "" }));
+            }}
+          />
+          {errors.title && (
+            <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+          )}
         </div>
         <div className="mt-8">
           <div className="flex flex-row items-center gap-1 mb-2">
@@ -113,10 +235,18 @@ const CrearPedido = () => {
             <p className="text-sm text-gray-500">(Requerido)</p>
           </div>
           <Textarea
+            value={formData.description}
+            onChange={(e) => {
+              setFormData({ ...formData, description: e.target.value });
+              setErrors((prev) => ({ ...prev, description: "" }));
+            }}
             style={{
               height: "100px",
             }}
           />
+          {errors.description && (
+            <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+          )}
           <p className="text-xs text-gray-500 font-medium mt-2">
             Brindanos aquí el detalle de las indicaciones de lo que debe verse y
             los textos (COPIES) que debemos incluir en el contenido. Ten en
@@ -153,9 +283,6 @@ const CrearPedido = () => {
                     Arrastra y suelta tus archivos aquí, o haz clic para
                     seleccionarlos
                   </p>
-                  <p className="text-xs text-gray-500">
-                    Tamaño máximo por archivo: 50MB
-                  </p>
                 </>
               )}
               {files.length > 0 && (
@@ -176,7 +303,12 @@ const CrearPedido = () => {
                           />
                         ) : (
                           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                            <p className="text-xs text-gray-500">{file.name}</p>
+                            <div className="flex items-center gap-3">
+                              <File className="h-2 text-gray-500" />
+                              <span className="text-sm text-gray-700 truncate max-w-[200px]">
+                                {file.name}
+                              </span>
+                            </div>
                           </div>
                         )}
                         <button
@@ -195,7 +327,9 @@ const CrearPedido = () => {
               )}
             </div>
           </div>
-
+          {errors.files && (
+            <p className="text-red-500 text-sm mt-1">{errors.files}</p>
+          )}
           <p className="text-xs text-gray-500 font-medium mt-2">
             Adjunta los archivos de REFERENTES que nos ayuden a comprender
             claramente tus ideas y expectativas respecto al contenido que
@@ -206,21 +340,13 @@ const CrearPedido = () => {
           </p>
         </div>
         <div className="pb-12 flex justify-end gap-4">
-          {/* <Button
-            variant={"outline"}
-            className="cursor-pointer"
-          >
-            Crear pedido
-          </Button> */}
-          {/* Temporal para probar la subida de archivos */}
-          {/* TODO: Quitar esta función y usar la de arriba */}
           <Button
             variant={"outline"}
             className="cursor-pointer"
             onClick={handleUpload}
             disabled={uploading}
           >
-            {uploading ? "Subiendo archivos..." : "Probar subida"}
+            {uploading ? "Creando pedido..." : "Crear pedido"}
           </Button>
         </div>
       </div>
