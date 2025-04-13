@@ -293,11 +293,11 @@ export type Project = Tables<"projects"> & {
     email: string;
   };
   project_designers?: Array<{
-    designer: {
+    designer?: {
       id: string;
       full_name: string | null;
       email: string;
-    };
+    } | null;
   }>;
 };
 

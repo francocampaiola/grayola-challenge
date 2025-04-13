@@ -5,18 +5,12 @@ import { Project, ProjectCreateInput, ProjectUpdateInput } from "@/types";
 export async function getProjects(userId?: string): Promise<Project[]> {
   const supabase = await createClient();
 
-  const { data: designers, error: designersError } = await supabase.from(
-    "project_designers"
-  ).select(`
-      *,
-      designer:designer_id (id, full_name, email)
-    `);
-
-  if (designersError) throw designersError;
-
   let query = supabase.from("projects").select(`
     *, 
-    client:client_id (id, full_name, email)
+    client:client_id (id, full_name, email),
+    project_designers (
+      designer:designer_id (id, full_name, email)
+    )
   `);
 
   if (userId) {
@@ -26,10 +20,7 @@ export async function getProjects(userId?: string): Promise<Project[]> {
   const { data: projects, error: projectsError } = await query;
   if (projectsError) throw projectsError;
 
-  return projects.map((project) => ({
-    ...project,
-    project_designers: designers.filter((d) => d.project_id === project.id),
-  }));
+  return projects || [];
 }
 
 export async function getProjectById(projectId: number): Promise<Project> {
@@ -118,21 +109,89 @@ export async function assignDesignersToProject(
 ): Promise<void> {
   const supabase = await createClient();
 
-  const { error: deleteError } = await supabase
-    .from("project_designers")
-    .delete()
-    .eq("project_id", projectId);
+  try {
+    console.log("Iniciando asignación de diseñadores:", {
+      projectId,
+      designerIds,
+    });
 
-  if (deleteError) throw deleteError;
+    // Verificar si el usuario es PM
+    const {
+      data: { user: authUser },
+      error: authError,
+    } = await supabase.auth.getUser();
+    console.log("Usuario autenticado:", authUser);
 
-  const { error: insertError } = await supabase
-    .from("project_designers")
-    .insert(
-      designerIds.map((designerId) => ({
+    if (authError || !authUser) {
+      console.error("Error de autenticación:", authError);
+      throw new Error("Usuario no autenticado");
+    }
+
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("role_id")
+      .eq("id", authUser.id)
+      .single();
+
+    console.log("Datos del usuario:", user);
+
+    if (userError || !user || user.role_id !== 2) {
+      console.error("Error de permisos:", { userError, user });
+      throw new Error("No tienes permisos para asignar diseñadores");
+    }
+
+    // Verificar que el proyecto existe
+    const { data: project, error: projectError } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("id", projectId)
+      .single();
+
+    console.log("Datos del proyecto:", project);
+
+    if (projectError || !project) {
+      console.error("Error al buscar proyecto:", projectError);
+      throw new Error("Proyecto no encontrado");
+    }
+
+    // Eliminar las asignaciones existentes
+    const { error: deleteError } = await supabase
+      .from("project_designers")
+      .delete()
+      .eq("project_id", projectId);
+
+    if (deleteError) {
+      console.error("Error al eliminar asignaciones:", deleteError);
+      throw new Error("Error al eliminar asignaciones existentes");
+    }
+
+    console.log("Asignaciones existentes eliminadas");
+
+    // Insertar las nuevas asignaciones
+    if (designerIds.length > 0) {
+      const newAssignments = designerIds.map((designerId) => ({
         project_id: projectId,
         designer_id: designerId,
-      }))
-    );
+        assigned_at: new Date().toISOString(),
+      }));
 
-  if (insertError) throw insertError;
+      console.log("Nuevas asignaciones a insertar:", newAssignments);
+
+      const { error: insertError } = await supabase
+        .from("project_designers")
+        .insert(newAssignments);
+
+      if (insertError) {
+        console.error("Error al insertar asignaciones:", insertError);
+        throw new Error("Error al asignar diseñadores");
+      }
+
+      console.log("Asignaciones insertadas correctamente");
+    } else {
+      console.log("No hay diseñadores para asignar");
+    }
+  } catch (error) {
+    console.error("Error en assignDesignersToProject:", error);
+    throw error;
+  }
 }
