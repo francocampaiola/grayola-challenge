@@ -2,14 +2,14 @@
 import { createClient } from "@/utils/supabase/server";
 import { Tables } from "@/app/types";
 
-export async function getUsers() {
+export async function getUsers(): Promise<Tables<"users">[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("users").select(`*, roles (*)`);
   if (error) throw error;
   return data;
 }
 
-export async function getUserById(userId: string) {
+export async function getUserById(userId: string): Promise<Tables<"users">> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("users")

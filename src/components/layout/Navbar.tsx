@@ -9,8 +9,6 @@ import { Skeleton } from "../ui/skeleton";
 
 const Navbar = () => {
   const { user, loading } = useUser();
-  console.log(user);
-
   return (
     <div className="w-full h-14 justify-between p-4 flex items-center">
       <Image src="/logo.png" alt="logo" width={150} height={100} />

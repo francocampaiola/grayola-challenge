@@ -11,7 +11,6 @@ export const handleRequest = async <T>(
       errorMessage: requestData.errorMessage[0],
     };
   } else if (typeof requestData?.errorMessage === "string") {
-    console.log(requestData?.errorMessage);
     return { success: false };
   }
 

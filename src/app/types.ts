@@ -275,15 +275,6 @@ export const Constants = {
   },
 } as const;
 
-export type User = {
-  id: string;
-  email: string;
-  full_name: string;
-  role_id: number;
-  created_at: string;
-  updated_at: string;
-};
-
 export type Order = {
   id: string;
   user_id: string;
@@ -301,3 +292,27 @@ export type Service = {
   created_at: string;
   updated_at: string;
 };
+
+export type Project = Tables<"projects"> & {
+  client?: {
+    id: string;
+    full_name: string | null;
+    email: string;
+  };
+  project_designers?: Array<{
+    designer: {
+      id: string;
+      full_name: string | null;
+      email: string;
+    };
+  }>;
+};
+
+export type ProjectCreateInput = {
+  title: string;
+  description: string;
+  client_id: string;
+  storage_path?: string;
+};
+
+export type ProjectUpdateInput = Partial<ProjectCreateInput>;
