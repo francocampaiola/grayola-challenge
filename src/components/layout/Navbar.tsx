@@ -6,12 +6,21 @@ import { BellDot } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/hooks/useUser";
 import { Skeleton } from "../ui/skeleton";
+import logo from "@/../public/logo.png";
 
 const Navbar = () => {
   const { user, loading } = useUser();
   return (
     <div className="w-full h-14 justify-between p-4 flex items-center">
-      <Image src="/logo.png" alt="logo" width={150} height={100} />
+      <Image
+        src={logo}
+        alt="logo"
+        width={150}
+        height={100}
+        priority
+        quality={100}
+        className="object-contain"
+      />
       <div className="flex items-center gap-4">
         {loading ? (
           <Skeleton className="w-20 h-4 rounded-full" />

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { handleRequest } from "@/utils/functions";
 import { ArrowRight } from "lucide-react";
+import logo from "@/../public/logo.png";
 
 const Login = () => {
   const [isPending, startTransition] = useTransition();
@@ -48,12 +49,14 @@ const Login = () => {
         <div className="flex items-center justify-center min-h-screen w-full bg-[#FFF8EE]">
           <div className="bg-[#FFFFFF] px-14 py-16 rounded-lg shadow-xl">
             <div className="flex justify-center mb-8">
-              <Image 
-                src="/logo.png" 
-                alt="Logo" 
-                width={200} 
+              <Image
+                src={logo}
+                alt="Logo"
+                width={200}
                 height={100}
                 priority
+                quality={100}
+                className="object-contain"
               />
             </div>
             <div className="text-center mt-8">
