@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Link from "next/link";
 import { useProjects } from "@/hooks/projects/useProjects";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -151,9 +152,11 @@ const Pedidos = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[160px]">
                       <DropdownMenuGroup>
-                        <DropdownMenuItem className="cursor-pointer">
-                          Ver proyecto
-                        </DropdownMenuItem>
+                        <Link href={`/dashboard/pedidos/${project.id}`}>
+                          <DropdownMenuItem className="cursor-pointer">
+                            Ver proyecto
+                          </DropdownMenuItem>
+                        </Link>
                         <DropdownMenuItem className="cursor-pointer">
                           Editar proyecto
                         </DropdownMenuItem>

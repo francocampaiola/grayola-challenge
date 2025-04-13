@@ -1,12 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { getFileUrl, listFiles } from "@/utils/supabase/storage";
 import { useProject } from "@/hooks/projects/useProjects";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { CircleCheck, Download, File, LoaderIcon } from "lucide-react";
-import { getFileUrl, listFiles } from "@/utils/supabase/storage";
 
 interface File {
   name: string;
@@ -96,6 +97,41 @@ const PedidoId = () => {
             value={data?.description || ""}
             disabled
           />
+        </div>
+
+        <div className="mt-8">
+          <p className="font-bold mb-2">Diseñadores asignados</p>
+          <div className="flex flex-wrap gap-4">
+            {data?.project_designers?.length ? (
+              data.project_designers.map((pd, index) => (
+                <div key={pd.designer.id} className="flex items-center gap-2">
+                  <Avatar className="w-10 h-10">
+                    <AvatarFallback
+                      style={{
+                        fontSize: "14px",
+                        backgroundColor:
+                          index === 0
+                            ? "#FF6B6B"
+                            : index === 1
+                            ? "#4ECDC4"
+                            : "#45B7D1",
+                        color: "white",
+                      }}
+                    >
+                      {pd.designer.full_name?.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium">
+                    {pd.designer.full_name}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <span className="text-sm text-gray-500">
+                No hay diseñadores asignados
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="mt-8 mb-8">
