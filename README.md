@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Grayola.io <br> Challenge by Franco Campaiola
 
-## Getting Started
+## Explicación técnica
 
-First, run the development server:
+Grayola es un proyecto hecho en Next.js con Supabase para facilitar la gestión de proyectos de diseño en una empresa.<br>
+Utiliza la autenticación de Supabase y la base de datos de Supabase para almacenar los datos de los proyectos. <br>
+Utiliza el bucket de Supabase para almacenar los archivos de los proyectos. <br>
+Utiliza shadcn/ui y tailwindcss para los estilos. <br>
+Utiliza react-hook-form y zod para el manejo de formularios. <br>
+Utiliza tanstack query para la gestión de datos. <br>
+
+## Requerimientos
+
+- NodeJS (versión 18 o superior)
+- Cuenta de Supabase
+
+## Instalación
+
+```bash
+git clone https://github.com/francocampaiola/grayola-challenge
+cd grayola-challenge
+```
+
+## Instalación de paquetes de NPM
+
+```bash
+npm install
+# o
+yarn install
+```
+
+## Copiar el archivo .env.example y crear el archivo .env
+
+```env
+NEXT_PUBLIC_SUPABASE_URL="tu-url-de-supabase"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="tu-anon-key"
+```
+
+## Para correr entorno de desarrollo
 
 ```bash
 npm run dev
-# or
+# o
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Para correr entorno de producción
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm run start
+# o
+yarn build
+yarn start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+## Scripts Disponibles
 
-## Learn More
+- `npm run dev`: Inicia el servidor de desarrollo
+- `npm run build`: Construye la aplicación para producción
+- `npm run start`: Inicia el servidor de producción
+- `npm run lint`: Ejecuta el linter
 
-To learn more about Next.js, take a look at the following resources:
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Demo
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`````
+Link de la demo: https://grayola-challenge-three.vercel.app
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Credenciales de acceso:
+- Email: demo@grayola.io
+- Contraseña: Demo0000
+`````
